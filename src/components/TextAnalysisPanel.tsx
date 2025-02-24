@@ -1,4 +1,5 @@
-// src/components/TextAnalysisPanel.tsx (update)
+// src/components/TextAnalysisPanel.tsx
+
 import React, { useState } from "react";
 import { Card } from "./ui/card";
 import { Textarea } from "./ui/textarea";
@@ -15,19 +16,23 @@ const TextAnalysisPanel = () => {
   const [text, setText] = useState(
     "George Washington lived at Mount Vernon during the American Revolution...",
   );
+  const [isAnalyzing, setIsAnalyzing] = useState(false); // State to disable button while analyzing
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setText(e.target.value);
   };
 
-  const handleAutoTag = async () => {
+  const handleAnalyzeText = async () => {
+    setIsAnalyzing(true); // Disable the button
+
     try {
       const newEntities = await analyzeText(text);
       setEntities(newEntities);
     } catch (error) {
-      console.error("Error during auto-tag:", error);
-      // Display an error message to the user (e.g., using a toast notification)
-      alert("Failed to analyze text. Please try again.");
+      console.error("Error during text analysis:", error);
+      alert("Failed to analyze text. Please try again."); // Replace with better error handling
+    } finally {
+      setIsAnalyzing(false); // Re-enable the button
     }
   };
 
@@ -65,9 +70,13 @@ const TextAnalysisPanel = () => {
     <Card className="h-full w-[400px] bg-white flex flex-col p-4 border-r">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-semibold">Text Analysis</h2>
-        <Button variant="outline" size="sm" onClick={handleAutoTag}>
-          <Tag className="h-4 w-4 mr-2" />
-          Auto-Tag
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleAnalyzeText}
+          disabled={isAnalyzing} // Disable during analysis
+        >
+          {isAnalyzing ? "Analyzing..." : "Analyze Text"}
         </Button>
       </div>
 
@@ -128,7 +137,7 @@ const TextAnalysisPanel = () => {
 
           {entities.length === 0 && (
             <p className="text-sm text-muted-foreground">
-              No entities detected. Use Auto-Tag to analyze the text.
+              No entities detected. Use Analyze Text to analyze the text.
             </p>
           )}
         </div>

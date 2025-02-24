@@ -64,8 +64,9 @@ export function GraphProvider({ children }: { children: ReactNode }) {
   );
 
   // Initialize Supabase client
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+  const supabaseUrl = "https://piqumtwptvufuedosvfi.supabase.co" || "";
+  const supabaseAnonKey =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBpcXVtdHdwdHZ1ZnVlZG9zdmZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzkxNzY4OTMsImV4cCI6MjA1NDc1Mjg5M30.9MqcfP8jLZ1bgIEKlJi4DCz-OKJ6hKBRc4UgRNPPzTU";
   const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
   const addNode = useCallback((node: Omit<NodeData, "id" | "position">) => {
