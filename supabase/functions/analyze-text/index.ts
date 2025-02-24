@@ -1,4 +1,3 @@
-// Supabase Function: supabase/functions/analyze-text/index.ts
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 
@@ -21,10 +20,10 @@ serve(async (req) => {
       throw new Error("GEMINI_API_KEY not set in environment.");
     }
 
-    // Replace with your actual Gemini API endpoint and request format
-    const geminiApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${geminiApiKey}`;
+    // Use the Gemini 1.5 Flash endpoint as per your curl snippet:
+    const modelEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`;
 
-    const geminiRequestBody = {
+    const requestBody = {
       contents: [
         {
           parts: [
@@ -36,47 +35,33 @@ serve(async (req) => {
       ],
     };
 
-    const geminiResponse = await fetch(geminiApiUrl, {
+    const response = await fetch(modelEndpoint, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(geminiRequestBody),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(requestBody),
     });
 
-    if (!geminiResponse.ok) {
-      console.error(
-        "Gemini API Error:",
-        geminiResponse.status,
-        await geminiResponse.text(),
-      );
-      throw new Error(`Gemini API request failed: ${geminiResponse.status}`);
+    if (!response.ok) {
+      console.error("Model API Error:", response.status, await response.text());
+      throw new Error(`Model API request failed: ${response.status}`);
     }
 
-    const geminiData = await geminiResponse.json();
+    const data = await response.json();
 
-    // **Crucially important:**  Parse the Gemini API response
-    // to extract the entities and their types.  This part
-    // depends entirely on the structure of Gemini's response.
-    // The example below is a placeholder.  You'll need to adapt it.
-    // For example,  geminiData.candidates[0].content.parts[0].text contains response as string.
-    // Use regular expressions or NLP library to parse the string and extract entities with labels.
-    // Example:
+    // Adjust parsing logic as needed based on the actual response structure.
+    const responseText = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
 
-    const geminiResponseText =
-      geminiData?.candidates?.[0]?.content?.parts?.[0]?.text || "";
-
-    // Very basic regex example - REPLACE THIS WITH PROPER PARSING
+    // Basic regex parsing: replace with more robust logic if necessary.
     const entityMatches = Array.from(
-      geminiResponseText.matchAll(
+      responseText.matchAll(
         /(?<text>[A-Za-z ]+) \((?<type>person|place|event|organization)\)/g,
       ),
     );
 
     const entities = entityMatches.map((match) => ({
       text: match.groups.text.trim(),
-      type: match.groups.type as Entity["type"],
-      id: crypto.randomUUID(), // Or generate a suitable ID
+      type: match.groups.type,
+      id: crypto.randomUUID(),
     }));
 
     return new Response(JSON.stringify({ entities }), {
