@@ -1,5 +1,3 @@
-// src/context/GraphContext.tsx
-
 import {
   createContext,
   useContext,
