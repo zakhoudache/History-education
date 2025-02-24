@@ -1,5 +1,5 @@
 // src/components/GraphDisplay.tsx
-import { useCallback, useRef, useEffect } from "react";
+import { useCallback, useRef,useState, useEffect } from "react";
 import ReactFlow, {
   Background,
   Controls,
