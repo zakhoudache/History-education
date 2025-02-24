@@ -1,0 +1,7 @@
+{
+  "name": "analyze-text",
+  "entrypoint": "index.ts",
+  "runtime": "deno-1.x",
+  "project_id": "piqumtwptvufuedosvfi"
+}
+

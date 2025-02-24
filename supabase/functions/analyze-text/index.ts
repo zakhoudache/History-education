@@ -16,7 +16,7 @@ serve(async (req) => {
       });
     }
 
-    const geminiApiKey = Deno.env.get("GEMINI_API_KEY");
+    const geminiApiKey = "AIzaSyA1V7Klm9lyEPtw6PViEeeTPoCTwwJQt5E";
     if (!geminiApiKey) {
       throw new Error("GEMINI_API_KEY not set in environment.");
     }
