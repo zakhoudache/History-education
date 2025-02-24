@@ -64,9 +64,9 @@ export function GraphProvider({ children }: { children: ReactNode }) {
   );
 
   // Initialize Supabase client
-  const supabaseUrl = "https://piqumtwptvufuedosvfi.supabase.co" || "";
+  const supabaseUrl = "https://uimmjzuqdqxfqoikcexf.supabase.co" || "";
   const supabaseAnonKey =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBpcXVtdHdwdHZ1ZnVlZG9zdmZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzkxNzY4OTMsImV4cCI6MjA1NDc1Mjg5M30.9MqcfP8jLZ1bgIEKlJi4DCz-OKJ6hKBRc4UgRNPPzTU";
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVpbW1qenVxZHF4ZnFvaWtjZXhmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDAwNDA1NTcsImV4cCI6MjA1NTYxNjU1N30.gSdv5Q0seyNiWhjEwXCzKzxYN1TUTFGxOpKUZtF06J0";
   const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
   const addNode = useCallback((node: Omit<NodeData, "id" | "position">) => {
@@ -123,7 +123,7 @@ export function GraphProvider({ children }: { children: ReactNode }) {
     async (text: string): Promise<Entity[]> => {
       try {
         const { data, error } = await supabase.functions.invoke(
-          "analyze-text",
+          "analyze-texty",
           {
             body: { text },
           },
