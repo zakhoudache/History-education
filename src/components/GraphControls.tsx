@@ -1,3 +1,4 @@
+// src/components/GraphControls.tsx
 import { Button } from "./ui/button";
 import {
   Dialog,
@@ -8,54 +9,45 @@ import {
 } from "./ui/dialog";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
 import { Plus, Edit2, Trash2 } from "lucide-react";
 import { useState } from "react";
-import { Node } from "reactflow";
+import { useGraph } from "@/context/GraphContext";
+import { NodeType, EdgeType } from "@/lib/types";
 
-export type NodeData = {
-  id: string;
-  type: "person" | "place" | "event" | "concept";
-  label: string;
-  subtitle?: string;
-  imageUrl?: string;
-  description?: string;
-};
+export default function GraphControls() {
+  const {
+    selectedNode,
+    selectedEdge,
+    addNode,
+    addEdge,
+    removeNode,
+    removeEdge,
+  } = useGraph();
 
-export type EdgeData = {
-  id: string;
-  source: string;
-  target: string;
-  label: string;
-  type: "causes" | "influences" | "participates" | "located";
-};
-
-interface GraphControlsProps {
-  onAddNode?: (node: Omit<NodeData, "id">) => void;
-  onAddEdge?: (edge: Omit<EdgeData, "id">) => void;
-  onDeleteNode?: (id: string) => void;
-  onDeleteEdge?: (id: string) => void;
-  selectedNode?: NodeData | null;
-  selectedEdge?: EdgeData | null;
-  nodes: Node[]; // Added to dynamically populate source/target options
-}
-
-export default function GraphControls({
-  onAddNode = () => {},
-  onAddEdge = () => {},
-  onDeleteNode = () => {},
-  onDeleteEdge = () => {},
-  selectedNode,
-  selectedEdge,
-  nodes,
-}: GraphControlsProps) {
   const [isAddNodeOpen, setIsAddNodeOpen] = useState(false);
   const [isAddEdgeOpen, setIsAddEdgeOpen] = useState(false);
-  const [newNode, setNewNode] = useState<Omit<NodeData, "id">>({
+  const [newNode, setNewNode] = useState<{
+    type: NodeType;
+    label: string;
+    subtitle?: string;
+    imageUrl?: string;
+  }>({
     type: "person",
     label: "",
   });
-  const [newEdge, setNewEdge] = useState<Omit<EdgeData, "id">>({
+  const [newEdge, setNewEdge] = useState<{
+    source: string;
+    target: string;
+    label: string;
+    type: EdgeType;
+  }>({
     source: "",
     target: "",
     label: "",
@@ -81,7 +73,9 @@ export default function GraphControls({
                 <Label>Type</Label>
                 <Select
                   value={newNode.type}
-                  onValueChange={(value: NodeData["type"]) => setNewNode({ ...newNode, type: value })}
+                  onValueChange={(value: NodeType) =>
+                    setNewNode({ ...newNode, type: value })
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -98,26 +92,32 @@ export default function GraphControls({
                 <Label>Label</Label>
                 <Input
                   value={newNode.label}
-                  onChange={(e) => setNewNode({ ...newNode, label: e.target.value })}
+                  onChange={(e) =>
+                    setNewNode({ ...newNode, label: e.target.value })
+                  }
                 />
               </div>
               <div className="space-y-2">
                 <Label>Subtitle (optional)</Label>
                 <Input
                   value={newNode.subtitle || ""}
-                  onChange={(e) => setNewNode({ ...newNode, subtitle: e.target.value })}
+                  onChange={(e) =>
+                    setNewNode({ ...newNode, subtitle: e.target.value })
+                  }
                 />
               </div>
               <div className="space-y-2">
                 <Label>Image URL (optional)</Label>
                 <Input
                   value={newNode.imageUrl || ""}
-                  onChange={(e) => setNewNode({ ...newNode, imageUrl: e.target.value })}
+                  onChange={(e) =>
+                    setNewNode({ ...newNode, imageUrl: e.target.value })
+                  }
                 />
               </div>
               <Button
                 onClick={() => {
-                  onAddNode(newNode);
+                  addNode(newNode);
                   setIsAddNodeOpen(false);
                   setNewNode({ type: "person", label: "" });
                 }}
@@ -144,7 +144,9 @@ export default function GraphControls({
                 <Label>Type</Label>
                 <Select
                   value={newEdge.type}
-                  onValueChange={(value: EdgeData["type"]) => setNewEdge({ ...newEdge, type: value })}
+                  onValueChange={(value: EdgeType) =>
+                    setNewEdge({ ...newEdge, type: value })
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -158,55 +160,43 @@ export default function GraphControls({
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Source Node</Label>
-                <Select
+                <Label>Source Node ID</Label>
+                <Input
                   value={newEdge.source}
-                  onValueChange={(value) => setNewEdge({ ...newEdge, source: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select source" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {nodes.map((node) => (
-                      <SelectItem key={node.id} value={node.id}>
-                        {node.data.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  onChange={(e) =>
+                    setNewEdge({ ...newEdge, source: e.target.value })
+                  }
+                />
               </div>
               <div className="space-y-2">
-                <Label>Target Node</Label>
-                <Select
+                <Label>Target Node ID</Label>
+                <Input
                   value={newEdge.target}
-                  onValueChange={(value) => setNewEdge({ ...newEdge, target: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select target" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {nodes.map((node) => (
-                      <SelectItem key={node.id} value={node.id}>
-                        {node.data.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  onChange={(e) =>
+                    setNewEdge({ ...newEdge, target: e.target.value })
+                  }
+                />
               </div>
               <div className="space-y-2">
                 <Label>Label</Label>
                 <Input
                   value={newEdge.label}
-                  onChange={(e) => setNewEdge({ ...newEdge, label: e.target.value })}
+                  onChange={(e) =>
+                    setNewEdge({ ...newEdge, label: e.target.value })
+                  }
                 />
               </div>
               <Button
                 onClick={() => {
-                  onAddEdge(newEdge);
+                  addEdge(newEdge);
                   setIsAddEdgeOpen(false);
-                  setNewEdge({ source: "", target: "", label: "", type: "influences" });
+                  setNewEdge({
+                    source: "",
+                    target: "",
+                    label: "",
+                    type: "influences",
+                  });
                 }}
-                disabled={!newEdge.source || !newEdge.target || !newEdge.label}
               >
                 Add Connection
               </Button>
@@ -224,7 +214,11 @@ export default function GraphControls({
               <Edit2 className="h-4 w-4 mr-2" />
               Edit
             </Button>
-            <Button size="sm" variant="destructive" onClick={() => onDeleteNode(selectedNode.id)}>
+            <Button
+              size="sm"
+              variant="destructive"
+              onClick={() => removeNode(selectedNode.id)}
+            >
               <Trash2 className="h-4 w-4 mr-2" />
               Delete
             </Button>
@@ -241,7 +235,11 @@ export default function GraphControls({
               <Edit2 className="h-4 w-4 mr-2" />
               Edit
             </Button>
-            <Button size="sm" variant="destructive" onClick={() => onDeleteEdge(selectedEdge.id)}>
+            <Button
+              size="sm"
+              variant="destructive"
+              onClick={() => removeEdge(selectedEdge.id)}
+            >
               <Trash2 className="h-4 w-4 mr-2" />
               Delete
             </Button>

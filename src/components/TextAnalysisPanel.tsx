@@ -1,40 +1,42 @@
-import React from "react";
+// src/components/TextAnalysisPanel.tsx (update)
+import React, { useState } from "react";
 import { Card } from "./ui/card";
 import { Textarea } from "./ui/textarea";
 import { Button } from "./ui/button";
 import { ScrollArea } from "./ui/scroll-area";
-import { Tag, X } from "lucide-react";
+import { Tag, X, ArrowRight } from "lucide-react";
+import { useGraph } from "@/context/GraphContext";
 
-interface Entity {
-  id: string;
-  type: "person" | "event" | "place" | "concept";
-  text: string;
-  startIndex: number;
-  endIndex: number;
-}
+const TextAnalysisPanel = () => {
+  const { entities, setEntities, analyzeText, convertEntitiesToNodes, nodes } =
+    useGraph();
 
-interface TextAnalysisPanelProps {
-  onTextChange?: (text: string) => void;
-}
-
-const TextAnalysisPanel = ({ onTextChange = () => {} }: TextAnalysisPanelProps) => {
-  const [text, setText] = React.useState("");
-  const [entities, setEntities] = React.useState<Entity[]>([]);
+  const [text, setText] = useState(
+    "George Washington lived at Mount Vernon during the American Revolution...",
+  );
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newText = e.target.value;
-    setText(newText);
-    onTextChange(newText);
-    const detected = newText
-      .split(" ")
-      .map((word, i) => ({
-        id: `${i}`,
-        type: ["person", "place", "event", "concept"][i % 4] as "person" | "place" | "event" | "concept",
-        text: word,
-        startIndex: i * (word.length + 1),
-        endIndex: (i + 1) * word.length + i,
-      }));
-    setEntities(detected);
+    setText(e.target.value);
+  };
+
+  const handleAutoTag = () => {
+    const newEntities = analyzeText(text);
+    setEntities(newEntities);
+  };
+
+  const handleAddToGraph = (entityId: string) => {
+    const entity = entities.find((e) => e.id === entityId);
+    if (entity) {
+      convertEntitiesToNodes([entity]);
+    }
+  };
+
+  const handleAddAllToGraph = () => {
+    convertEntitiesToNodes(entities);
+  };
+
+  const handleRemoveEntity = (id: string) => {
+    setEntities(entities.filter((entity) => entity.id !== id));
   };
 
   const getEntityColor = (type: Entity["type"]) => {
@@ -45,8 +47,6 @@ const TextAnalysisPanel = ({ onTextChange = () => {} }: TextAnalysisPanelProps) 
         return "bg-red-100 text-red-800 border-red-300";
       case "place":
         return "bg-green-100 text-green-800 border-green-300";
-      case "concept":
-        return "bg-purple-100 text-purple-800 border-purple-300";
       default:
         return "bg-gray-100 text-gray-800 border-gray-300";
     }
@@ -56,36 +56,72 @@ const TextAnalysisPanel = ({ onTextChange = () => {} }: TextAnalysisPanelProps) 
     <Card className="h-full w-[400px] bg-white flex flex-col p-4 border-r">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-semibold">Text Analysis</h2>
-        <Button variant="outline" size="sm">
+        <Button variant="outline" size="sm" onClick={handleAutoTag}>
           <Tag className="h-4 w-4 mr-2" />
           Auto-Tag
         </Button>
       </div>
+
       <ScrollArea className="flex-grow">
         <Textarea
           value={text}
           onChange={handleTextChange}
-          placeholder="Paste your text here..."
+          placeholder="Paste your historical text here..."
           className="min-h-[200px] resize-none mb-4"
         />
+
         <div className="space-y-2">
-          <h3 className="font-medium">Detected Entities</h3>
+          <div className="flex justify-between items-center">
+            <h3 className="font-medium">Detected Entities</h3>
+            {entities.length > 0 && (
+              <Button variant="outline" size="sm" onClick={handleAddAllToGraph}>
+                <ArrowRight className="h-4 w-4 mr-2" />
+                Add All to Graph
+              </Button>
+            )}
+          </div>
+
           {entities.map((entity) => (
             <div
               key={entity.id}
-              className={`flex items-center justify-between p-2 rounded border ${getEntityColor(entity.type)}`}
-              role="button"
-              tabIndex={0}
+              className={`flex items-center justify-between p-2 rounded border ${getEntityColor(
+                entity.type,
+              )}`}
             >
               <div className="flex items-center space-x-2">
                 <span className="font-medium">{entity.text}</span>
-                <span className="text-sm opacity-70 capitalize">({entity.type})</span>
+                <span className="text-sm opacity-70 capitalize">
+                  ({entity.type})
+                </span>
               </div>
-              <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                <X className="h-4 w-4" />
-              </Button>
+              <div className="flex">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 w-6 p-0 mr-1"
+                  onClick={() => handleAddToGraph(entity.id)}
+                  title="Add to Graph"
+                >
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 w-6 p-0"
+                  onClick={() => handleRemoveEntity(entity.id)}
+                  title="Remove"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           ))}
+
+          {entities.length === 0 && (
+            <p className="text-sm text-muted-foreground">
+              No entities detected. Use Auto-Tag to analyze the text.
+            </p>
+          )}
         </div>
       </ScrollArea>
     </Card>

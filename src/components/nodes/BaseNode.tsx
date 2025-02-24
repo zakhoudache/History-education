@@ -1,17 +1,18 @@
+// src/components/nodes/BaseNode.tsx (remains mostly the same but with updated types)
 import { Handle, Position } from "reactflow";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { Landmark, User, Calendar, Lightbulb } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { NodeData } from "@/lib/types";
 
 interface BaseNodeProps {
-  data: {
-    label: string;
-    type: "person" | "place" | "event" | "concept";
-    imageUrl?: string;
-    subtitle?: string;
-    description?: string;
-  };
+  data: NodeData;
   selected?: boolean;
 }
 
@@ -21,7 +22,10 @@ const nodeConfig = {
     gradient: "from-blue-100 to-blue-200",
     border: "border-blue-300",
     shape: "rounded-full",
-    animation: { scale: [1, 1.02, 1], transition: { duration: 2, repeat: Infinity } },
+    animation: {
+      scale: [1, 1.02, 1],
+      transition: { duration: 2, repeat: Infinity },
+    },
   },
   place: {
     icon: Landmark,
@@ -35,14 +39,20 @@ const nodeConfig = {
     gradient: "from-red-100 to-red-200",
     border: "border-red-300",
     shape: "rounded-xl",
-    animation: { rotate: [0, 1, 0], transition: { duration: 4, repeat: Infinity } },
+    animation: {
+      rotate: [0, 1, 0],
+      transition: { duration: 4, repeat: Infinity },
+    },
   },
   concept: {
     icon: Lightbulb,
     gradient: "from-purple-100 to-purple-200",
     border: "border-purple-300",
     shape: "rounded-[2rem]",
-    animation: { opacity: [0.8, 1, 0.8], transition: { duration: 3, repeat: Infinity } },
+    animation: {
+      opacity: [0.8, 1, 0.8],
+      transition: { duration: 3, repeat: Infinity },
+    },
   },
 };
 
@@ -68,7 +78,11 @@ export default function BaseNode({ data, selected }: BaseNodeProps) {
             <div className="flex items-center gap-3">
               {data.imageUrl ? (
                 <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white shadow-sm">
-                  <img src={data.imageUrl} alt={data.label} className="w-full h-full object-cover" />
+                  <img
+                    src={data.imageUrl}
+                    alt={data.label}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
               ) : (
                 <div className="w-10 h-10 rounded-full bg-white/50 flex items-center justify-center">
@@ -78,16 +92,23 @@ export default function BaseNode({ data, selected }: BaseNodeProps) {
               <div>
                 <div className="font-semibold">{data.label}</div>
                 {data.subtitle && (
-                  <div className="text-sm text-muted-foreground">{data.subtitle}</div>
+                  <div className="text-sm text-muted-foreground">
+                    {data.subtitle}
+                  </div>
                 )}
               </div>
             </div>
-            <Handle type="source" position={Position.Bottom} className="w-2 h-2" />
+            <Handle
+              type="source"
+              position={Position.Bottom}
+              className="w-2 h-2"
+            />
           </motion.div>
         </TooltipTrigger>
         <TooltipContent>
           <p>
-            {data.description || `${data.type.charAt(0).toUpperCase() + data.type.slice(1)}: ${data.label}`}
+            {data.description ||
+              `${data.type.charAt(0).toUpperCase() + data.type.slice(1)}: ${data.label}`}
           </p>
         </TooltipContent>
       </Tooltip>
