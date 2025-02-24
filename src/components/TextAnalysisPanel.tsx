@@ -6,9 +6,10 @@ import { Button } from "./ui/button";
 import { ScrollArea } from "./ui/scroll-area";
 import { Tag, X, ArrowRight } from "lucide-react";
 import { useGraph } from "@/context/GraphContext";
+import { Entity } from "@/lib/types";
 
 const TextAnalysisPanel = () => {
-  const { entities, setEntities, analyzeText, convertEntitiesToNodes, nodes } =
+  const { entities, setEntities, analyzeText, convertEntitiesToNodes } =
     useGraph();
 
   const [text, setText] = useState(
@@ -19,9 +20,15 @@ const TextAnalysisPanel = () => {
     setText(e.target.value);
   };
 
-  const handleAutoTag = () => {
-    const newEntities = analyzeText(text);
-    setEntities(newEntities);
+  const handleAutoTag = async () => {
+    try {
+      const newEntities = await analyzeText(text);
+      setEntities(newEntities);
+    } catch (error) {
+      console.error("Error during auto-tag:", error);
+      // Display an error message to the user (e.g., using a toast notification)
+      alert("Failed to analyze text. Please try again.");
+    }
   };
 
   const handleAddToGraph = (entityId: string) => {
@@ -47,6 +54,8 @@ const TextAnalysisPanel = () => {
         return "bg-red-100 text-red-800 border-red-300";
       case "place":
         return "bg-green-100 text-green-800 border-green-300";
+      case "organization":
+        return "bg-yellow-100 text-yellow-800 border-yellow-300";
       default:
         return "bg-gray-100 text-gray-800 border-gray-300";
     }
