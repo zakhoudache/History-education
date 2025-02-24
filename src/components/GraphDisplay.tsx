@@ -1,5 +1,5 @@
 // src/components/GraphDisplay.tsx
-import { useCallback, useRef,useState, useEffect } from "react";
+import { useCallback, useRef, useEffect, useState } from "react";
 import ReactFlow, {
   Background,
   Controls,
@@ -19,6 +19,7 @@ const nodeTypes = {
   custom: BaseNode,
 };
 
+/** Define edge styles based on their type */
 const getEdgeStyle = (type: string) => {
   const styles = {
     causes: { stroke: "#ef4444", strokeWidth: 2 },
@@ -29,6 +30,22 @@ const getEdgeStyle = (type: string) => {
   return styles[type] || { stroke: "#64748b", strokeWidth: 2 };
 };
 
+/** Custom hook to observe container resize events */
+const useResizeObserver = (ref: React.RefObject<HTMLDivElement>) => {
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+  useEffect(() => {
+    if (!ref.current) return;
+    const observer = new ResizeObserver((entries) => {
+      const { width, height } = entries[0].contentRect;
+      setDimensions({ width, height });
+    });
+    observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, [ref]);
+  return dimensions;
+};
+
+/** GraphDisplay component */
 const GraphDisplay = () => {
   const {
     nodes,
@@ -42,33 +59,25 @@ const GraphDisplay = () => {
 
   const containerRef = useRef<HTMLDivElement>(null);
   const reactFlowInstance = useRef<ReactFlowInstance | null>(null);
-
-  // Custom resize observer hook (simplified version; replace with your own if different)
-  const useResizeObserver = (ref: React.RefObject<HTMLDivElement>) => {
-    const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
-    useEffect(() => {
-      const observer = new ResizeObserver((entries) => {
-        const { width, height } = entries[0].contentRect;
-        setDimensions({ width, height });
-      });
-      if (ref.current) observer.observe(ref.current);
-      return () => observer.disconnect();
-    }, [ref]);
-    return dimensions;
-  };
-
   const dimensions = useResizeObserver(containerRef);
 
-  // Update container dimensions in context
+  // Debug logging for dimensions
+  console.log("dimensions:", dimensions);
+
+  // Update container dimensions in context with defensive check
   useEffect(() => {
-    if (
-      dimensions.width > 0 &&
-      dimensions.height > 0 &&
-      (dimensions.width !== containerDimensions.width || dimensions.height !== containerDimensions.height)
-    ) {
-      setContainerDimensions({ width: dimensions.width, height: dimensions.height });
-      if (reactFlowInstance.current) {
-        reactFlowInstance.current.fitView();
+    if (dimensions && dimensions.width > 0 && dimensions.height > 0) {
+      if (
+        dimensions.width !== containerDimensions.width ||
+        dimensions.height !== containerDimensions.height
+      ) {
+        setContainerDimensions({
+          width: dimensions.width,
+          height: dimensions.height,
+        });
+        if (reactFlowInstance.current) {
+          reactFlowInstance.current.fitView();
+        }
       }
     }
   }, [dimensions, setContainerDimensions, containerDimensions]);
@@ -77,7 +86,10 @@ const GraphDisplay = () => {
   const flowNodes: Node[] = nodes.map((node) => ({
     id: node.id,
     type: "custom",
-    position: node.position || { x: Math.random() * 500, y: Math.random() * 300 },
+    position: node.position || {
+      x: Math.random() * 500,
+      y: Math.random() * 300,
+    },
     data: node,
   }));
 
@@ -92,6 +104,7 @@ const GraphDisplay = () => {
     data: { type: edge.type },
   }));
 
+  // Handle node click events
   const handleNodeClick = useCallback(
     (_: React.MouseEvent, node: Node) => {
       selectNode(node.data);
@@ -99,6 +112,7 @@ const GraphDisplay = () => {
     [selectNode],
   );
 
+  // Handle edge click events
   const handleEdgeClick = useCallback(
     (_: React.MouseEvent, edge: Edge) => {
       selectEdge({
@@ -112,6 +126,7 @@ const GraphDisplay = () => {
     [selectEdge],
   );
 
+  // Handle new connections between nodes
   const onConnect = useCallback(
     (params: Connection) => {
       addNewEdge({
@@ -124,6 +139,7 @@ const GraphDisplay = () => {
     [addNewEdge],
   );
 
+  // Initialize ReactFlow instance and fit view
   const onInit = useCallback((instance: ReactFlowInstance) => {
     reactFlowInstance.current = instance;
     instance.fitView();
