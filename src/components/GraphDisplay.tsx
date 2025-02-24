@@ -71,10 +71,7 @@ const GraphDisplay = () => {
         dimensions.width !== containerDimensions.width ||
         dimensions.height !== containerDimensions.height
       ) {
-        setContainerDimensions({
-          width: dimensions.width,
-          height: dimensions.height,
-        });
+        setContainerDimensions({ width: dimensions.width, height: dimensions.height });
         if (reactFlowInstance.current) {
           reactFlowInstance.current.fitView();
         }
@@ -86,10 +83,7 @@ const GraphDisplay = () => {
   const flowNodes: Node[] = nodes.map((node) => ({
     id: node.id,
     type: "custom",
-    position: node.position || {
-      x: Math.random() * 500,
-      y: Math.random() * 300,
-    },
+    position: node.position || { x: Math.random() * 500, y: Math.random() * 300 },
     data: node,
   }));
 
@@ -109,7 +103,7 @@ const GraphDisplay = () => {
     (_: React.MouseEvent, node: Node) => {
       selectNode(node.data);
     },
-    [selectNode],
+    [selectNode]
   );
 
   // Handle edge click events
@@ -123,7 +117,7 @@ const GraphDisplay = () => {
         type: edge.data?.type || "influences",
       });
     },
-    [selectEdge],
+    [selectEdge]
   );
 
   // Handle new connections between nodes
@@ -136,7 +130,7 @@ const GraphDisplay = () => {
         type: "influences",
       });
     },
-    [addNewEdge],
+    [addNewEdge]
   );
 
   // Initialize ReactFlow instance and fit view
