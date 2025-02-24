@@ -74,7 +74,7 @@ import 'https://deno.land/x/dotenv/load.ts'; // Load environment variables from 
 import * as path from "https://deno.land/std@0.188.0/path/mod.ts";
 
 const projectId = "https://piqumtwptvufuedosvfi.supabase.co";  // Get these from Supabase dashboard
-const serviceRoleKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBpcXVtdHdwdHZ1ZnVlZG9zdmZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzkxNzY4OTMsImV4cCI6MjA1NDc1Mjg5M30.9MqcfP8jLZ1bgIEKlJi4DCz-OKJ6hKBRc4UgRNPPzTU";
+const serviceRoleKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBpcXVtdHdwdHZ1ZnVlZG9zdmZpIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTczOTE3Njg5MywiZXhwIjoyMDU0NzUyODkzfQ.cHuJp-UKr_962KV8nlu30JgvSuymbCr-uA4JevnoUx4";
 const functionName = 'analyze-text'; // Name of your function (must match in supabase.json)
 const functionDir = './supabase/functions/analyze-text'; // Directory containing function files
 
