@@ -123,7 +123,7 @@ export function GraphProvider({ children }: { children: ReactNode }) {
     async (text: string): Promise<Entity[]> => {
       try {
         const { data, error } = await supabase.functions.invoke(
-          "analyze-texty",
+          "analyze-text",
           {
             body: { text },
           },
