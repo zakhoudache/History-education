@@ -4,12 +4,12 @@ import * as path from "https://deno.land/std@0.188.0/path/mod.ts";
 
 const projectId = "piqumtwptvufuedosvf"; // Get these from Supabase dashboard - The SHORT alphanumeric ID, NOT the URL
 const serviceRoleKey =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBpcXVtdHdwdHZ1ZnVlZG9zdmZpIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTczOTE3Njg5MywiZXhwIjoyMDU0NzUyODkzfQ.cHuJp-UKr_962KV8nlu30JgvSuymbCr-uA4JevnoUx4"; // REPLACE WITH THE SERVICE_ROLE KEY, NOT THE ANON KEY!
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVpbW1qenVxZHF4ZnFvaWtjZXhmIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MDA0MDU1NywiZXhwIjoyMDU1NjE2NTU3fQ.da5x63mxpnLCfNHBTxobfwC2MC5w9dJZ4x35j9Yghvc"; // REPLACE WITH THE SERVICE_ROLE KEY, NOT THE ANON KEY!
 
-const functionName = "analyze-text"; // Name of your function (must match in supabase.json)
+const functionName = "analyze-texty"; // Name of your function (must match in supabase.json)
 
 // Use absolute file paths to avoid any relative path issues:
-const functionDir = "supabase/functions/analyze-text"; // Ensure this is the CORRECT absolute path!
+const functionDir = "supabase/functions/analyze-texty"; // Ensure this is the CORRECT absolute path!
 
 async function deployFunction(
   projectId: string,
