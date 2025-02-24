@@ -7,7 +7,7 @@ import { Tag, X } from "lucide-react";
 
 interface Entity {
   id: string;
-  type: "person" | "event" | "place";
+  type: "person" | "event" | "place" | "concept";
   text: string;
   startIndex: number;
   endIndex: number;
@@ -15,45 +15,26 @@ interface Entity {
 
 interface TextAnalysisPanelProps {
   onTextChange?: (text: string) => void;
-  onEntitySelect?: (entity: Entity) => void;
-  entities?: Entity[];
 }
 
-const TextAnalysisPanel = ({
-  onTextChange = () => {},
-  onEntitySelect = () => {},
-  entities = [
-    {
-      id: "1",
-      type: "person",
-      text: "George Washington",
-      startIndex: 0,
-      endIndex: 17,
-    },
-    {
-      id: "2",
-      type: "place",
-      text: "Mount Vernon",
-      startIndex: 25,
-      endIndex: 37,
-    },
-    {
-      id: "3",
-      type: "event",
-      text: "American Revolution",
-      startIndex: 45,
-      endIndex: 63,
-    },
-  ],
-}: TextAnalysisPanelProps) => {
-  const [text, setText] = React.useState(
-    "George Washington lived at Mount Vernon during the American Revolution...",
-  );
+const TextAnalysisPanel = ({ onTextChange = () => {} }: TextAnalysisPanelProps) => {
+  const [text, setText] = React.useState("");
+  const [entities, setEntities] = React.useState<Entity[]>([]);
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newText = e.target.value;
     setText(newText);
     onTextChange(newText);
+    const detected = newText
+      .split(" ")
+      .map((word, i) => ({
+        id: `${i}`,
+        type: ["person", "place", "event", "concept"][i % 4] as "person" | "place" | "event" | "concept",
+        text: word,
+        startIndex: i * (word.length + 1),
+        endIndex: (i + 1) * word.length + i,
+      }));
+    setEntities(detected);
   };
 
   const getEntityColor = (type: Entity["type"]) => {
@@ -64,6 +45,8 @@ const TextAnalysisPanel = ({
         return "bg-red-100 text-red-800 border-red-300";
       case "place":
         return "bg-green-100 text-green-800 border-green-300";
+      case "concept":
+        return "bg-purple-100 text-purple-800 border-purple-300";
       default:
         return "bg-gray-100 text-gray-800 border-gray-300";
     }
@@ -78,32 +61,25 @@ const TextAnalysisPanel = ({
           Auto-Tag
         </Button>
       </div>
-
       <ScrollArea className="flex-grow">
         <Textarea
           value={text}
           onChange={handleTextChange}
-          placeholder="Paste your historical text here..."
+          placeholder="Paste your text here..."
           className="min-h-[200px] resize-none mb-4"
         />
-
         <div className="space-y-2">
           <h3 className="font-medium">Detected Entities</h3>
           {entities.map((entity) => (
             <div
               key={entity.id}
-              className={`flex items-center justify-between p-2 rounded border ${getEntityColor(
-                entity.type,
-              )}`}
-              onClick={() => onEntitySelect(entity)}
+              className={`flex items-center justify-between p-2 rounded border ${getEntityColor(entity.type)}`}
               role="button"
               tabIndex={0}
             >
               <div className="flex items-center space-x-2">
                 <span className="font-medium">{entity.text}</span>
-                <span className="text-sm opacity-70 capitalize">
-                  ({entity.type})
-                </span>
+                <span className="text-sm opacity-70 capitalize">({entity.type})</span>
               </div>
               <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
                 <X className="h-4 w-4" />
