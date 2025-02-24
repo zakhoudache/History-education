@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { corsHeaders } from "../_shared/cors.ts";
+import { corsHeaders } from "./_shared/cors.ts";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -15,12 +15,12 @@ serve(async (req) => {
       });
     }
 
-    const geminiApiKey = "AIzaSyA1V7Klm9lyEPtw6PViEeeTPoCTwwJQt5E";
+    const geminiApiKey = "AIzaSyA1V7Klm9lyEPtw6PViEeeTPoCTwwJQt5E"; //REPLACE THIS WITH YOUR ACTUAL KEY
     if (!geminiApiKey) {
       throw new Error("GEMINI_API_KEY not set in environment.");
     }
 
-    // Use the Gemini 1.5 Flash endpoint as per your curl snippet:
+    // Use the Gemini 1.5 Flash endpoint:
     const modelEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`;
 
     const requestBody = {

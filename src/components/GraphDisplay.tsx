@@ -1,4 +1,4 @@
-import { useCallback, useRef, useEffect, useState } from "react";
+import React, { useCallback, useRef, useEffect, useState } from "react";
 import ReactFlow, {
   Background,
   Controls,
@@ -6,13 +6,12 @@ import ReactFlow, {
   Node,
   Edge,
   Connection,
-  addEdge,
-  ReactFlowInstance,
   ConnectionMode,
+  ReactFlowInstance,
 } from "reactflow";
 import "reactflow/dist/style.css";
 import BaseNode from "./nodes/BaseNode";
-import { useGraph, EdgeType } from "@/context/GraphContext"; // Import EdgeType
+import { useGraph, EdgeType } from "@/context/GraphContext"; // Import EdgeType from context
 import { debounce } from "lodash";
 
 const nodeTypes = {
@@ -36,28 +35,22 @@ const useResizeObserver = (ref: React.RefObject<HTMLDivElement>) => {
   useEffect(() => {
     if (!ref.current) return;
 
-    // Create a stable callback for the observer
     const handleResize = (entries: ResizeObserverEntry[]) => {
       const { width, height } = entries[0].contentRect;
       setDimensions({ width, height });
     };
 
-    // Create the observer instance using useRef to persist it
     observerRef.current = new ResizeObserver(handleResize);
-
-    // Start observing the element
     observerRef.current.observe(ref.current);
 
     return () => {
-      // Disconnect the observer in the cleanup function
       observerRef.current?.disconnect();
     };
-  }, [ref]); // Only depend on the ref object itself
+  }, [ref]);
 
   return dimensions;
 };
 
-// Type guard to check if the node data has a type property
 function hasType(data: any): data is { type: string } {
   return typeof data === "object" && data !== null && "type" in data;
 }
@@ -81,12 +74,9 @@ const GraphDisplay = () => {
   const debouncedFitView = useCallback(
     debounce(() => {
       if (reactFlowInstance.current) {
-        // Add a check here to see if fitView is actually needed (example)
-        // You would need to get the current view bounds and compare with containerDimensions
-        // to determine if a fitView is necessary.
         reactFlowInstance.current.fitView();
       }
-    }, 200), // Adjust the delay as needed
+    }, 200),
     [],
   );
 
@@ -101,7 +91,7 @@ const GraphDisplay = () => {
           width: dimensions.width,
           height: dimensions.height,
         });
-        debouncedFitView(); // Call the debounced version
+        debouncedFitView();
       }
     }
   }, [
@@ -111,6 +101,7 @@ const GraphDisplay = () => {
     debouncedFitView,
   ]);
 
+  // Map context nodes/edges to ReactFlow format
   const flowNodes: Node[] = nodes.map((node) => ({
     id: node.id,
     type: "custom",
@@ -124,7 +115,7 @@ const GraphDisplay = () => {
     target: edge.target,
     label: edge.label,
     animated: true,
-    style: getEdgeStyle(edge.type as EdgeType), //Cast here
+    style: getEdgeStyle(edge.type as EdgeType),
     data: { type: edge.type },
   }));
 
@@ -141,8 +132,8 @@ const GraphDisplay = () => {
         id: edge.id,
         source: edge.source,
         target: edge.target,
-        label: (edge.label || "") as string, // Provide a default
-        type: (edge.data?.type as EdgeType) || defaultEdgeType, // Use the default from context
+        label: (edge.label || "") as string,
+        type: (edge.data?.type as EdgeType) || defaultEdgeType,
       });
     },
     [selectEdge, defaultEdgeType],
@@ -154,7 +145,7 @@ const GraphDisplay = () => {
         source: params.source!,
         target: params.target!,
         label: "New Connection",
-        type: EdgeType.INFLUENCES, // Or use defaultEdgeType if appropriate
+        type: EdgeType.INFLUENCES,
       });
     },
     [addNewEdge],
@@ -192,7 +183,7 @@ const GraphDisplay = () => {
               };
               return colors[(node as any).data.type] || "#64748b";
             }
-            return "#64748b"; // Default color if no type
+            return "#64748b";
           }}
           nodeStrokeWidth={3}
           maskColor="rgba(0, 0, 0, 0.1)"

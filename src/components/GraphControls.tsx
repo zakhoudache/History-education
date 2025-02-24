@@ -1,4 +1,3 @@
-// src/components/GraphControls.tsx
 import { Button } from "./ui/button";
 import {
   Dialog,
