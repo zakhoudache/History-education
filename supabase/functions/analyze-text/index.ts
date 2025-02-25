@@ -1,5 +1,29 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { corsHeaders } from "./_shared/cors.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { GoogleGenerativeAI } from "https://esm.sh/@google/generative-ai@^0.3.0";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
+};
+
+// Initialize Supabase client
+const supabaseUrl = "https://uimmjzuqdqxfqoikcexf.supabase.co";
+const supabaseKey =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVpbW1qenVxZHF4ZnFvaWtjZXhmIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MDA0MDU1NywiZXhwIjoyMDU1NjE2NTU3fQ.da5x63mxpnLCfNHBTxobfwC2MC5w9dJZ4x35j9Yghvc";
+
+function deriveEntityType(text: string, context: string): string {
+  const lowerText = text.toLowerCase();
+  const lowerCtx = context.toLowerCase();
+
+  if (/(^[A-Z][a-z]+ [A-Z][a-z]+$)/.test(text)) return "person";
+  if (/(revolution|war|agreement|conference)/.test(lowerText)) return "event";
+  if (/(city|region|continent|country)/.test(lowerCtx)) return "place";
+  if (/(economic|market|trade|organization)/.test(lowerCtx))
+    return "organization";
+  return "concept";
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -15,54 +39,44 @@ serve(async (req) => {
       });
     }
 
-    const geminiApiKey = "AIzaSyA1V7Klm9lyEPtw6PViEeeTPoCTwwJQt5E"; //REPLACE THIS WITH YOUR ACTUAL KEY
-    if (!geminiApiKey) {
-      throw new Error("GEMINI_API_KEY not set in environment.");
-    }
+    const genAI = new GoogleGenerativeAI(
+      "AIzaSyA1V7Klm9lyEPtw6PViEeeTPoCTwwJQt5E",
+    );
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
-    // Use the Gemini 1.5 Flash endpoint:
-    const modelEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`;
+    const prompt = `Analyze this text and provide:
+      - Entities with types (person/place/organization/event/concept)
+      - Relationships between entities
+      Format as JSON: { 
+        "entities": [{"text":"...","type":"...","context":"..."}], 
+        "relationships": [{"source":"...","target":"...","type":"..."}] 
+      }\n\nText: ${text}`;
 
-    const requestBody = {
-      contents: [
-        {
-          parts: [
-            {
-              text: `Extract named entities (persons, places, events, organizations) and classify their types from the following text: ${text}`,
-            },
-          ],
-        },
-      ],
-    };
+    const result = await model.generateContent(prompt);
+    const analysisText = (await result.response).text();
+    const cleanJson = analysisText.replace(/```json\n?|```/g, "").trim();
+    const parsed = JSON.parse(cleanJson);
 
-    const response = await fetch(modelEndpoint, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(requestBody),
+    const entities = parsed.entities?.length ? parsed.entities : [];
+    const seen = new Set();
+
+    parsed.relationships?.forEach((rel: any) => {
+      [rel.source, rel.target].forEach((text) => {
+        if (!seen.has(text)) {
+          seen.add(text);
+          entities.push({
+            id: crypto.randomUUID(),
+            text,
+            type: deriveEntityType(text, rel.type),
+            context: rel.type,
+          });
+        }
+      });
     });
 
-    if (!response.ok) {
-      console.error("Model API Error:", response.status, await response.text());
-      throw new Error(`Model API request failed: ${response.status}`);
-    }
-
-    const data = await response.json();
-
-    // Adjust parsing logic as needed based on the actual response structure.
-    const responseText = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
-
-    // Basic regex parsing: replace with more robust logic if necessary.
-    const entityMatches = Array.from(
-      responseText.matchAll(
-        /(?<text>[A-Za-z ]+) \((?<type>person|place|event|organization)\)/g,
-      ),
-    );
-
-    const entities = entityMatches.map((match) => ({
-      text: match.groups.text.trim(),
-      type: match.groups.type,
-      id: crypto.randomUUID(),
-    }));
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const { error } = await supabase.from("entities").insert(entities);
+    if (error) console.error("Supabase insert error:", error);
 
     return new Response(JSON.stringify({ entities }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

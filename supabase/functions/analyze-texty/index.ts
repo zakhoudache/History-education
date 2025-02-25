@@ -1,6 +1,6 @@
-// Supabase Function: supabase/functions/analyze-text/index.ts
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
+import { GoogleGenerativeAI } from "https://esm.sh/@google/generative-ai@^0.3.0";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -16,68 +16,47 @@ serve(async (req) => {
       });
     }
 
-    const geminiApiKey = "AIzaSyA1V7Klm9lyEPtw6PViEeeTPoCTwwJQt5E";
-    if (!geminiApiKey) {
-      throw new Error("GEMINI_API_KEY not set in environment.");
-    }
-
-    // Replace with your actual Gemini API endpoint and request format
-    const geminiApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${geminiApiKey}`;
-
-    const geminiRequestBody = {
-      contents: [
-        {
-          parts: [
-            {
-              text: `Extract named entities (persons, places, events, organizations) and classify their types from the following text: ${text}`,
-            },
-          ],
-        },
-      ],
-    };
-
-    const geminiResponse = await fetch(geminiApiUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(geminiRequestBody),
-    });
-
-    if (!geminiResponse.ok) {
-      console.error(
-        "Gemini API Error:",
-        geminiResponse.status,
-        await geminiResponse.text(),
-      );
-      throw new Error(`Gemini API request failed: ${geminiResponse.status}`);
-    }
-
-    const geminiData = await geminiResponse.json();
-
-    // **Crucially important:**  Parse the Gemini API response
-    // to extract the entities and their types.  This part
-    // depends entirely on the structure of Gemini's response.
-    // The example below is a placeholder.  You'll need to adapt it.
-    // For example,  geminiData.candidates[0].content.parts[0].text contains response as string.
-    // Use regular expressions or NLP library to parse the string and extract entities with labels.
-    // Example:
-
-    const geminiResponseText =
-      geminiData?.candidates?.[0]?.content?.parts?.[0]?.text || "";
-
-    // Very basic regex example - REPLACE THIS WITH PROPER PARSING
-    const entityMatches = Array.from(
-      geminiResponseText.matchAll(
-        /(?<text>[A-Za-z ]+) \((?<type>person|place|event|organization)\)/g,
-      ),
+    const genAI = new GoogleGenerativeAI(
+      "AIzaSyA1V7Klm9lyEPtw6PViEeeTPoCTwwJQt5E",
     );
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
-    const entities = entityMatches.map((match) => ({
-      text: match.groups.text.trim(),
-      type: match.groups.type as Entity["type"],
-      id: crypto.randomUUID(), // Or generate a suitable ID
-    }));
+    const prompt = `Analyze this text and extract named entities. For each entity, determine its type (person, place, event, concept, or organization) and provide relevant context.
+
+Provide the output in this exact JSON format:
+{
+  "entities": [
+    {
+      "text": "entity name",
+      "type": "one of: person/place/event/concept/organization",
+      "context": "brief context about this entity"
+    }
+  ]
+}
+
+Text to analyze: ${text}`;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const analysisText = response.text();
+
+    let entities = [];
+    try {
+      // Try to extract JSON from the response, handling potential markdown formatting
+      const jsonMatch = analysisText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        entities = parsed.entities.map((entity: any) => ({
+          id: crypto.randomUUID(),
+          text: entity.text,
+          type: entity.type.toLowerCase(),
+          context: entity.context || "",
+        }));
+      }
+    } catch (e) {
+      console.error("Failed to parse entities:", e);
+      console.log("Raw response:", analysisText);
+    }
 
     return new Response(JSON.stringify({ entities }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

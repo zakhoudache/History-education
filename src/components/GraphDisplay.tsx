@@ -11,7 +11,7 @@ import ReactFlow, {
 } from "reactflow";
 import "reactflow/dist/style.css";
 import BaseNode from "./nodes/BaseNode";
-import { useGraph, EdgeType } from "@/context/GraphContext"; // Import EdgeType from context
+import { useGraph, EdgeType } from "@/context/GraphContext";
 import { debounce } from "lodash";
 
 const nodeTypes = {
